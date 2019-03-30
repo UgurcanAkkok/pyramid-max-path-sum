@@ -8,12 +8,16 @@ bool check_usage (int); // There should be 1 additional argument (PROGRAM FILE)
 int find_height(int); //Given number of nodes, finds height of pyramid
 bool not_prime(int); // We cant use prime nodes
 void printPyramid(int * p, int h);
+struct Node {
+    bool prime;
+    int val;
+};
 class Pyramid {
     private:
         ifstream file;
         unsigned short h;
         unsigned int nodesNum;
-        int ** nodes;
+        Node ** nodes;
     public:
         Pyramid(const char *);
         ~Pyramid();
@@ -28,15 +32,20 @@ int main(int argc, char* argv[]){
     
     cout << "The maximum path sum is "<< pyr.maxSum() << endl;
     pyr.print();
-
-
 }
 
 bool not_prime(int num){
-    for (int i = 1; i < sqrt(num); i++){
-        if (num % i == 0) return true;
+    switch(num){
+        case 1: return true;
+        case 2: return false;
+        default:
+                for (int i = 2; i <= (int)sqrt(num); i++){
+                    if (num % i == 0){
+                        return true;
+                    }
+                }
+                return false;
     }
-    return false;
 }
 
 int find_height(int len){
@@ -61,15 +70,20 @@ Pyramid::Pyramid(const char * fName){
         nodesNum++;
     }
     this->h = find_height(nodesNum);
-    nodes = new int *[h];
+    nodes = new Node *[h];
     for (int i = 0; i < h; i++){
-        nodes[i] = new int [i + 1];
+        nodes[i] = new Node [i + 1];
     }
     file.clear();
     file.seekg(0, ios::beg);
     for (int i = 0; i < h; i++){
         for (int j = 0; j <= i; j++){
-            file >> nodes[i][j];
+            file >> nodes[i][j].val;
+        }
+    }
+    for (int i = 0; i < h; i++){
+        for (int j = 0; j <= i; j++){
+            nodes[i][j].prime = !not_prime(nodes[i][j].val);
         }
     }
 }
@@ -82,27 +96,27 @@ Pyramid::~Pyramid(){
 int Pyramid::maxSum(){
     for (int i = h-2; i >= 0; i--){
         for (int j = 0; j <= i; j++){
-            int &curr = nodes[i][j];
-            int &left = nodes[i+1][j];
-            int &right = nodes[i+1][j+1];
+            Node &curr = nodes[i][j];
+            Node &left = nodes[i+1][j];
+            Node &right = nodes[i+1][j+1];
             
-            if (not_prime(curr)){
-                if (not_prime(left) && left >= right){
-                    curr += left;
+            if (curr.prime == false){
+                if (left.prime == false && left.val >= right.val){
+                    curr.val += left.val;
                 }
-                else if (not_prime(right) && right >= left){
-                    curr += left;
+                else if (right.prime == false && right.val >= left.val){
+                    curr.val += right.val;
                 }
             }
         }
     }
-    return nodes[0][0];
+    return nodes[0][0].val;
 }
 
 void Pyramid::print(){
     for (int i = 0; i < h; i++){
         for (int j = 0; j <= i; j++){
-            cout << this->nodes[i][j] << " ";
+            cout << this->nodes[i][j].val << " ";
         }
         cout << endl;
     }

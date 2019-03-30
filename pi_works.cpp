@@ -47,16 +47,90 @@ n2 + n - 2y = 0
 #include <fstream>
 #include <cmath>
 
-#define MAX_HEIGHT 200
-
 using namespace std;
 
-struct Node {
-    int value;
-    bool isPrime;
-    Node leftChild;
-    Node rightChild;
-};
+bool check_usage (int); // There should be 1 additional argument (PROGRAM FILE)
+int find_height(int); //Given number of nodes, finds height of pyramid
+bool is_prime(int); // We cant use prime nodes
+int * max(int *,int *);
+void printPyramid(int * p, int h);
+
+
+int main(int argc, char* argv[]){
+    int pyr_len = 0;
+    ifstream pyramidFile(argv[1]);
+    int h;
+    int garbage; //while counting num of nodes, i use dummy var
+
+    if (check_usage(argc) == false) return 1;
+    // Check we can open the file
+    if (!pyramidFile.is_open()){
+        cout << "Could not open file" << endl;
+        return 1;
+    }
+    while (pyramidFile >> garbage){
+        pyr_len++;
+    }
+    h = find_height(pyr_len);
+
+    // Construct given pyramid as 2dim matrix
+    int ** pyramid = new int * [h];
+    for (int i = 0; i < h; i++){
+        pyramid[i] = new int [i]; 
+    }
+    // Put the cursor at the beginning
+    pyramidFile.clear();
+    pyramidFile.seekg(0, ios::beg);
+    int curr_h = 1;
+    // Set length of each row as increasing at each step, beginning with 1
+    while (curr_h <= h){
+        for (int i = 0; i < curr_h; i++){
+            pyramidFile >> pyramid[curr_h - 1][i];
+        }
+        curr_h++;
+    }
+    // Starting with upper row of last row, sum each node with left and 
+    // right childs, find the max between them, set that node as that sum,
+    // Do not use prime nodes
+    for (int i=h-2; i>=0; i--){
+        for (int j = 0; j <= i; j++){
+            int * curr = &pyramid[i][j];
+            int * left = &pyramid[i + 1][j];
+            int * right = &pyramid[i + 1][j + 1];
+            if (!is_prime(*curr)){
+                int * max_node = max(left,right);
+                if (!is_prime(*max_node)){
+                    *curr += *max_node;
+                }
+                else {
+                    if (!is_prime(*left)){
+                        *curr += *left;
+                    }
+                    else if (!is_prime(*right)){
+                        *curr += *right;
+                    }
+                }
+            }
+        }
+    }
+    // Print the pyramid
+    // Print the top node
+    cout << *pyramid[0] << endl;
+    // Clean up
+    delete [] pyramid;
+    pyramidFile.close();
+}
+
+bool is_prime(int num){
+    for (int i = 1; i < sqrt(num); i++){
+        if (num % i == 0) return false;
+    }
+    return true;
+}
+
+int find_height(int len){
+    return (-1 + sqrt(1 + 8 * len)) / 2;
+}
 
 bool check_usage(int c){
     if (c != 2){
@@ -65,25 +139,6 @@ bool check_usage(int c){
     }
     return true;
 }
-
-int find_height(int len);
-
-int main(int argc, char* argv[]){
-    if (check_usage(argc) == false) return 1;
-    int pyr_len = 0;
-    Node * pyramid;
-
-    ifstream pyramidFile(argv[1]);
-    if (pyramidFile.is_open()){
-        int num;
-        while(pyramidFile >> num){
-            pyr_len++;
-        }
-    }
-    int height = find_height(pyr_len);
-    pyramid = new Node [height];
-}
-
-int find_height(int len){
-    return (-1 + sqrt(1 + 8 * len)) / 2;
+int * max(int * a,int * b){
+    return (*a >= *b)? a : b;
 }

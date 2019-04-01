@@ -55,6 +55,8 @@ int main(int argc, char* argv[]){
     // first and only argument should be file name
     if (check_usage(argc) == false) return 1;
     Pyramid pyr(argv[1]);
+    cout << "First situation of pyramid is " << endl;
+    pyr.print();
     
     cout << "The maximum path sum is "<< pyr.maxSum() << endl;
     cout << "Final situation of pyramid is" << endl;
@@ -117,6 +119,7 @@ Pyramid::Pyramid(const char * fName){
             file >> nodes[i][j].val;
         }
     }
+    // Prime numbers are tagged
     for (int i = 0; i < h; i++){
         for (int j = 0; j <= i; j++){
             nodes[i][j].prime = !not_prime(nodes[i][j].val);
@@ -137,15 +140,32 @@ int Pyramid::maxSum(){
             Node &curr = nodes[i][j];
             Node &left = nodes[i+1][j];
             Node &right = nodes[i+1][j+1];
+            //MY MISTAKE WITH PREVIOUS ASSIGNMENT
+            //If any node's both child are prime, that node is considered prime too
+            //because we cant use that node, we wont be able to walk further from that
+            if (left.prime && right.prime){
+                curr.prime = true;
+            }
             
             if (curr.prime == false){
-                if (left.prime == false && left.val >= right.val){
-                    curr.val += left.val;
+                if (left.prime == false && right.prime == false){
+                    if (left.val >= right.val){
+                        curr.val += left.val;
+                    }
+                    else {
+                        curr.val += right.val;
+                    }
                 }
-                else if (right.prime == false && right.val >= left.val){
-                    curr.val += right.val;
+                else {
+                    if (left.prime == false){
+                        curr.val += left.val;
+                    }
+                    else if (right.prime == false){
+                        curr.val += right.val;
+                    }
                 }
             }
+            
         }
     }
     return nodes[0][0].val;
